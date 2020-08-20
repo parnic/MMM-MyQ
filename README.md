@@ -14,7 +14,7 @@ MyQ module for MagicMirror²
 1. Clone this repo into `~/MagicMirror/modules` directory.
 1. Configure your `~/MagicMirror/config/config.js`:
 
-    ```json
+    ```js
     {
         module: 'MMM-MyQ',
         position: 'top_right',
