@@ -1,0 +1,20 @@
+.MMM-MyQ .table {
+    border-spacing: 10px 0;
+    border-collapse: separate;
+    text-align: center;
+}
+
+.MMM-MyQ .icon {
+    -webkit-filter: grayscale(100%);
+    filter: grayscale(100%);
+}
+
+.MMM-MyQ .row {
+    vertical-align: middle;
+}
+
+.MMM-MyQ .live {
+    font-size: 10px;
+    line-height: 15px;
+    display: block;
+}
