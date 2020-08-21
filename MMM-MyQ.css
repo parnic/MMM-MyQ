@@ -19,6 +19,25 @@
     display: block;
 }
 
-.MMM-MyQ .d-none {
-    display: none;
+.MMM-MyQ .control {
+    background: #000;
+    border: 1px solid #6c757d;
+    font-size: .9rem;
+    color: #fff;
+    display: block;
+    text-align: center;
+    line-height: 1.5;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+	box-sizing: border-box;
+	position: relative;
+	width: 80%;
+	height: 5rem;
+	margin: auto;
+    font-weight: bold;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: none;
+    outline: none;
 }

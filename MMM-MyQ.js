@@ -19,6 +19,7 @@ Module.register('MMM-MyQ', {
 
     start() {
         Log.info(`Starting module: ${this.name}`);
+        this.deviceStates = new Map();
         this.sendSocketNotification('MYQ_CONFIG', this.config);
     },
 
@@ -34,24 +35,51 @@ Module.register('MMM-MyQ', {
             Log.error(`context=${context}, err=${err.message}`);
         } else if (notification === 'MYQ_TOGGLE_COMPLETE') {
             this.scheduleUpdate();
-        } else if (notification === 'MYQ_DEVICE_FOUND') {
-            this.device = payload;
+        } else if (notification === 'MYQ_DEVICES_FOUND') {
+            this.devices = payload;
         } else if (notification === 'MYQ_DEVICE_STATE') {
             const {device, state} = payload;
-            this.deviceState = state;
 
-            if (this.desiredState) {
-                if (state.doorState !== this.desiredState) {
+            let existingDevice = this.getDevice(device);
+            if (!existingDevice) {
+                this.deviceStates.set(device, {state});
+                existingDevice = device;
+            } else {
+                this.updateDevice(existingDevice, device);
+            }
+
+            let entry = this.deviceStates.get(existingDevice);
+            entry.state = state;
+            if (entry.desiredState) {
+                if (state.doorState !== entry.desiredState) {
                     this.scheduleUpdate();
                 } else {
-                    this.desiredState = null;
+                    entry.desiredState = null;
                 }
             }
 
-            if (!this.desiredState) {
+            if (!entry.desiredState) {
                 this.updateDom();
             }
         }
+    },
+
+    getDevice(inDevice) {
+        if (this.deviceStates && inDevice) {
+            for (let device of this.deviceStates.keys()) {
+                if (device.serialNumber === inDevice.serialNumber) {
+                    return device;
+                }
+            }
+        }
+
+        return null;
+    },
+
+    updateDevice(existingDevice, device) {
+        existingDevice.doorState = device.doorState;
+        existingDevice.doorStateUpdated = device.doorStateUpdated;
+        existingDevice.online = device.online;
     },
 
     scheduleUpdate() {
@@ -65,56 +93,41 @@ Module.register('MMM-MyQ', {
 
     getDom() {
         const wrapper = document.createElement('div');
-        const scores = document.createElement('div');
-        const header = document.createElement('header');
-        header.innerHTML = 'MyQ';
-        scores.appendChild(header);
 
-        if (!this.scores) {
-            const text = document.createElement('div');
-            text.innerHTML = this.translate('LOADING');
-            text.classList.add('dimmed', 'light');
-            scores.appendChild(text);
-
-            if (this.device && this.deviceState && !this.desiredState) {
-                if (this.deviceState.doorState === this.constants.doorStates[1] || this.deviceState.doorState === this.constants.doorStates[2]) {
-                    const btn = document.createElement('button');
-
-                    let action = this.constants.doorCommands.close;
-                    btn.textContent = 'close';
-                    if (this.deviceState.doorState === this.constants.doorStates[2]) {
-                        action = this.constants.doorCommands.open;
-                        btn.textContent = 'open';
-                    }
-
-                    btn.onclick = () => {
-                        this.sendSocketNotification('MYQ_TOGGLE', {device: this.device, action});
-                        btn.classList.add('d-none');
-                        this.deviceState = null;
-                        this.desiredState = action === this.constants.doorCommands.close ? this.constantsHelper.closedState : this.constantsHelper.openState;
-                    }
-
-                    scores.appendChild(btn);
-                } else {
-                    this.scheduleUpdate();
-                }
+        if (this.deviceStates) {
+            for (let [device, deviceData] of this.deviceStates) {
+                wrapper.appendChild(this.getDeviceDom(device, deviceData));
             }
-        } else {
-            const table = document.createElement('table');
-            table.classList.add('small', 'table');
-
-            table.appendChild(this.createLabelRow());
-
-            const max = Math.min(this.rotateIndex + this.config.matches, this.scores.length);
-            for (let i = this.rotateIndex; i < max; i += 1) {
-                this.appendDataRow(this.scores[i], table);
-            }
-
-            scores.appendChild(table);
         }
 
-        wrapper.appendChild(scores);
-
         return wrapper;
+    },
+
+    getDeviceDom(device, deviceData) {
+        const nameLabel = document.createElement('div');
+        nameLabel.textContent = device.name;
+
+        const actionLabel = document.createElement('div');
+        let action = this.constants.doorCommands.close;
+        actionLabel.textContent = this.translate('Opened');
+        if (deviceData.state.doorState === this.constantsHelper.closedState) {
+            action = this.constants.doorCommands.open;
+            actionLabel.textContent = this.translate('Closed');
+        }
+
+        const btn = document.createElement('button');
+
+        btn.classList.add('control', 'light');
+        btn.onclick = () => {
+            this.sendSocketNotification('MYQ_TOGGLE', {device, action});
+            btn.disabled = true;
+            actionLabel.textContent = '';
+            deviceData.desiredState = action === this.constants.doorCommands.close ? this.constantsHelper.closedState : this.constantsHelper.openState;
+        }
+
+        btn.appendChild(nameLabel);
+        btn.appendChild(actionLabel);
+
+        return btn;
     }
 });

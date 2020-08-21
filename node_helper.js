@@ -65,17 +65,16 @@ module.exports = NodeHelper.create({
                     throw new Error('getDevices error');
                 }
 
-                result.devices.forEach((device) => {
-                    if (this.config.types.includes(device.type)) {
-                        this.sendSocketNotification('MYQ_DEVICE_FOUND', device);
+                let devices = result.devices.filter((device) => this.config.types.includes(device.type));
+                this.sendSocketNotification('MYQ_DEVICES_FOUND', devices);
 
-                        this.account.getDoorState(device.serialNumber)
-                            .then((state) => {
-                                if (state.returnCode === 0) {
-                                    this.sendSocketNotification('MYQ_DEVICE_STATE', { device, state });
-                                }
-                            });
-                    }
+                devices.forEach((device) => {
+                    this.account.getDoorState(device.serialNumber)
+                        .then((state) => {
+                            if (state.returnCode === 0) {
+                                this.sendSocketNotification('MYQ_DEVICE_STATE', { device, state });
+                            }
+                        });
                 });
             })
             .catch((err) => {
