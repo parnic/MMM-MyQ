@@ -27,6 +27,10 @@ Module.register('MMM-MyQ', {
             Log.log('logged in');
             Log.log(payload);
             this.constants = payload;
+            this.constantsHelper = {
+                openState: this.constants.doorStates[1],
+                closedState: this.constants.doorStates[2],
+            };
         } else if (notification === 'MYQ_ERROR') {
             const {context, err} = payload;
             Log.error(`context=${context}, err=${err.message}`);
@@ -38,8 +42,6 @@ Module.register('MMM-MyQ', {
             this.device = payload;
             Log.log('found a device');
             Log.log(this.device);
-
-            this.updateDom();
         } else if (notification === 'MYQ_DEVICE_STATE') {
             const {device, state} = payload;
             this.deviceState = state;
@@ -47,13 +49,21 @@ Module.register('MMM-MyQ', {
             Log.log(device);
             Log.log(state);
 
-            this.updateDom();
+            if (this.desiredState) {
+                if (state.doorState !== this.desiredState) {
+                    this.scheduleUpdate();
+                } else {
+                    this.desiredState = null;
+                }
+            }
+
+            if (!this.desiredState) {
+                this.updateDom();
+            }
         }
     },
 
     scheduleUpdate() {
-        // todo: sometimes 5 seconds isn't enough to return the new state after sending a toggle command.
-        // for example: door is "open", Close command sent, wait 5 seconds, get state, state is still "open", wait 5 more seconds, state is now "closing"
         if (!this.timeout) {
             this.timeout = setTimeout(() => {
                 this.timeout = null;
@@ -75,7 +85,7 @@ Module.register('MMM-MyQ', {
             text.classList.add('dimmed', 'light');
             scores.appendChild(text);
 
-            if (this.device && this.deviceState) {
+            if (this.device && this.deviceState && !this.desiredState) {
                 if (this.deviceState.doorState === this.constants.doorStates[1] || this.deviceState.doorState === this.constants.doorStates[2]) {
                     const btn = document.createElement('button');
 
@@ -90,6 +100,7 @@ Module.register('MMM-MyQ', {
                         this.sendSocketNotification('MYQ_TOGGLE', {device: this.device, action});
                         btn.classList.add('d-none');
                         this.deviceState = null;
+                        this.desiredState = action === this.constants.doorCommands.close ? this.constantsHelper.closedState : this.constantsHelper.openState;
                     }
 
                     scores.appendChild(btn);

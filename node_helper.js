@@ -13,6 +13,18 @@ module.exports = NodeHelper.create({
         console.log(`Starting module helper: ${this.name}`);
     },
 
+    resetUpdates() {
+        if (this.intervalId) {
+            console.log(`${this.name} clearing update interval`)
+            clearInterval(this.intervalId);
+        }
+
+        this.intervalId = setInterval(() => {
+            console.log(`${this.name} update interval elapsed`);
+            this.getData();
+        }, this.config.updateInterval);
+    },
+
     socketNotificationReceived(notification, payload) {
         if (notification === 'MYQ_CONFIG') {
             this.config = payload;
@@ -27,9 +39,7 @@ module.exports = NodeHelper.create({
                     this.sendSocketNotification('MYQ_LOGGED_IN', constants);
                     this.getData();
 
-                    setInterval(() => {
-                        this.getData();
-                    }, this.config.updateInterval);
+                    this.resetUpdates();
                 })
                 .catch((err) => {
                     this.sendSocketNotification('MYQ_ERROR', {context: 'login', err});
@@ -49,6 +59,8 @@ module.exports = NodeHelper.create({
     },
 
     getData() {
+        this.resetUpdates();
+
         this.account.getDevices()
             .then((result) => {
                 if (result.returnCode !== 0) {
