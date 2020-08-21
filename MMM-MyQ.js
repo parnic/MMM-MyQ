@@ -29,9 +29,11 @@ Module.register('MMM-MyQ', {
             this.constants = payload;
         } else if (notification === 'MYQ_ERROR') {
             const {context, err} = payload;
-            Log.error(`context=${context}, err=${err}`);
+            Log.error(`context=${context}, err=${err.message}`);
         } else if (notification === 'MYQ_TOGGLE_COMPLETE') {
             Log.log(`toggled. success=${payload}`);
+
+            this.scheduleUpdate();
         } else if (notification === 'MYQ_DEVICE_FOUND') {
             this.device = payload;
             Log.log('found a device');
@@ -40,9 +42,23 @@ Module.register('MMM-MyQ', {
             this.updateDom();
         } else if (notification === 'MYQ_DEVICE_STATE') {
             const {device, state} = payload;
+            this.deviceState = state;
             Log.log('got device state');
             Log.log(device);
             Log.log(state);
+
+            this.updateDom();
+        }
+    },
+
+    scheduleUpdate() {
+        // todo: sometimes 5 seconds isn't enough to return the new state after sending a toggle command.
+        // for example: door is "open", Close command sent, wait 5 seconds, get state, state is still "open", wait 5 more seconds, state is now "closing"
+        if (!this.timeout) {
+            this.timeout = setTimeout(() => {
+                this.timeout = null;
+                this.sendSocketNotification('MYQ_UPDATE');
+            }, 5000);
         }
     },
 
@@ -55,17 +71,32 @@ Module.register('MMM-MyQ', {
 
         if (!this.scores) {
             const text = document.createElement('div');
-            const btn = document.createElement('button');
-            if (this.device) {
-                btn.onclick = () => {
-                    this.sendSocketNotification('MYQ_TOGGLE', {device: this.device, action: this.constants.doorCommands.close});
-                }
-            }
-            btn.textContent = 'close';
             text.innerHTML = this.translate('LOADING');
             text.classList.add('dimmed', 'light');
             scores.appendChild(text);
-            scores.appendChild(btn);
+
+            if (this.device && this.deviceState) {
+                if (this.deviceState.doorState === this.constants.doorStates[1] || this.deviceState.doorState === this.constants.doorStates[2]) {
+                    const btn = document.createElement('button');
+
+                    let action = this.constants.doorCommands.close;
+                    btn.textContent = 'close';
+                    if (this.deviceState.doorState === this.constants.doorStates[2]) {
+                        action = this.constants.doorCommands.open;
+                        btn.textContent = 'open';
+                    }
+
+                    btn.onclick = () => {
+                        this.sendSocketNotification('MYQ_TOGGLE', {device: this.device, action});
+                        btn.classList.add('d-none');
+                        this.deviceState = null;
+                    }
+
+                    scores.appendChild(btn);
+                } else {
+                    this.scheduleUpdate();
+                }
+            }
         } else {
             const table = document.createElement('table');
             table.classList.add('small', 'table');

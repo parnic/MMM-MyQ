@@ -18,3 +18,7 @@
     line-height: 15px;
     display: block;
 }
+
+.MMM-MyQ .d-none {
+    display: none;
+}
