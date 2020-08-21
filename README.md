@@ -20,7 +20,7 @@ MyQ module for MagicMirror²
         position: 'top_right',
         config: {
             email: 'you@example.com',
-            password: 'correct horse battery stapler'
+            password: 'correct horse battery staple'
         }
     }
     ```

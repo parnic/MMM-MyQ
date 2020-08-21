@@ -5,10 +5,8 @@
  * MIT Licensed.
  */
 
-/* eslint-env node */
-
 const NodeHelper = require('node_helper');
-const { myQ, _ } = require('myq-api');
+const { myQ } = require('myq-api');
 
 module.exports = NodeHelper.create({
     start() {
@@ -19,11 +17,9 @@ module.exports = NodeHelper.create({
         if (notification === 'MYQ_CONFIG') {
             this.config = payload;
             this.account = new myQ(this.config.email, this.config.password);
-            console.log('config received');
-            this.account
-                .login()
+
+            this.account.login()
                 .then((result) => {
-                    console.log('login complete');
                     if (result.returnCode !== 0) {
                         throw new Error('login failure');
                     }
@@ -32,8 +28,8 @@ module.exports = NodeHelper.create({
                     this.getData();
                 })
                 .catch((err) => {
-                    this.sendSocketNotification('MYQ_ERROR');
-                    console.error(`login error: ${err}`);
+                    this.sendSocketNotification('MYQ_ERROR', {context: 'login', err});
+                    console.error(`myq login error: ${err}`);
                 });
 
             setInterval(() => {
@@ -43,35 +39,28 @@ module.exports = NodeHelper.create({
     },
 
     getData() {
-        console.log('retrieving devices');
-        this.account
-            .getDevices()
+        this.account.getDevices()
             .then((result) => {
-                console.log('devices retrieved');
                 result.devices.forEach((device) => {
                     if (this.config.types.includes(device.type)) {
                         this.sendSocketNotification('MYQ_DEVICE_FOUND', device);
 
                         console.log('getting door state');
                         console.log(device);
-                        this.account
-                            .getDoorState(device.serialNumber)
+                        this.account.getDoorState(device.serialNumber)
                             .then((state) => {
                                 console.log('state');
                                 console.log(state);
                                 if (state.returnCode === 0) {
-                                    this.sendSocketNotification(
-                                        'MYQ_DEVICE_STATE',
-                                        { device, state }
-                                    );
+                                    this.sendSocketNotification('MYQ_DEVICE_STATE', { device, state });
                                 }
                             });
                     }
                 });
             })
             .catch((err) => {
-                this.sendSocketNotification('MYQ_ERROR');
-                console.error(`getData error: ${err}`);
+                this.sendSocketNotification('MYQ_ERROR', {context: 'getDevices', err});
+                console.error(`myQ getDevices error: ${err}`);
             });
     }
 });

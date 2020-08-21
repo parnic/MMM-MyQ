@@ -7,9 +7,8 @@
 
 Module.register('MMM-MyQ', {
     defaults: {
-        colored: false,
-        email: 'email',
-        password: 'password',
+        email: '',
+        password: '',
         types: ['wifigaragedooropener'],
         updateInterval: 5 * 60 * 1000 // every 5 minutes
     },
@@ -49,10 +48,7 @@ Module.register('MMM-MyQ', {
 
             table.appendChild(this.createLabelRow());
 
-            const max = Math.min(
-                this.rotateIndex + this.config.matches,
-                this.scores.length
-            );
+            const max = Math.min(this.rotateIndex + this.config.matches, this.scores.length);
             for (let i = this.rotateIndex; i < max; i += 1) {
                 this.appendDataRow(this.scores[i], table);
             }
