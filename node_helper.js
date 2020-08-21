@@ -15,12 +15,10 @@ module.exports = NodeHelper.create({
 
     resetUpdates() {
         if (this.intervalId) {
-            console.log(`${this.name} clearing update interval`)
             clearInterval(this.intervalId);
         }
 
         this.intervalId = setInterval(() => {
-            console.log(`${this.name} update interval elapsed`);
             this.getData();
         }, this.config.updateInterval);
     },

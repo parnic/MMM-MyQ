@@ -24,8 +24,6 @@ Module.register('MMM-MyQ', {
 
     socketNotificationReceived(notification, payload) {
         if (notification === 'MYQ_LOGGED_IN') {
-            Log.log('logged in');
-            Log.log(payload);
             this.constants = payload;
             this.constantsHelper = {
                 openState: this.constants.doorStates[1],
@@ -35,19 +33,12 @@ Module.register('MMM-MyQ', {
             const {context, err} = payload;
             Log.error(`context=${context}, err=${err.message}`);
         } else if (notification === 'MYQ_TOGGLE_COMPLETE') {
-            Log.log(`toggled. success=${payload}`);
-
             this.scheduleUpdate();
         } else if (notification === 'MYQ_DEVICE_FOUND') {
             this.device = payload;
-            Log.log('found a device');
-            Log.log(this.device);
         } else if (notification === 'MYQ_DEVICE_STATE') {
             const {device, state} = payload;
             this.deviceState = state;
-            Log.log('got device state');
-            Log.log(device);
-            Log.log(state);
 
             if (this.desiredState) {
                 if (state.doorState !== this.desiredState) {
