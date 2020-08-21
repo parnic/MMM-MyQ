@@ -20,13 +20,29 @@ Module.register('MMM-MyQ', {
     start() {
         Log.info(`Starting module: ${this.name}`);
         this.sendSocketNotification('MYQ_CONFIG', this.config);
-        this.sendSocketNotification('MYQ_UPDATE');
     },
 
     socketNotificationReceived(notification, payload) {
-        if (notification === 'SCORES') {
-            this.scores = payload.scores;
-            this.details = payload.details;
+        if (notification === 'MYQ_LOGGED_IN') {
+            Log.log('logged in');
+            Log.log(payload);
+            this.constants = payload;
+        } else if (notification === 'MYQ_ERROR') {
+            const {context, err} = payload;
+            Log.error(`context=${context}, err=${err}`);
+        } else if (notification === 'MYQ_TOGGLE_COMPLETE') {
+            Log.log(`toggled. success=${payload}`);
+        } else if (notification === 'MYQ_DEVICE_FOUND') {
+            this.device = payload;
+            Log.log('found a device');
+            Log.log(this.device);
+
+            this.updateDom();
+        } else if (notification === 'MYQ_DEVICE_STATE') {
+            const {device, state} = payload;
+            Log.log('got device state');
+            Log.log(device);
+            Log.log(state);
         }
     },
 
@@ -39,9 +55,17 @@ Module.register('MMM-MyQ', {
 
         if (!this.scores) {
             const text = document.createElement('div');
+            const btn = document.createElement('button');
+            if (this.device) {
+                btn.onclick = () => {
+                    this.sendSocketNotification('MYQ_TOGGLE', {device: this.device, action: this.constants.doorCommands.close});
+                }
+            }
+            btn.textContent = 'close';
             text.innerHTML = this.translate('LOADING');
             text.classList.add('dimmed', 'light');
             scores.appendChild(text);
+            scores.appendChild(btn);
         } else {
             const table = document.createElement('table');
             table.classList.add('small', 'table');

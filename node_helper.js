@@ -6,7 +6,7 @@
  */
 
 const NodeHelper = require('node_helper');
-const { myQ } = require('myq-api');
+const { myQ, constants } = require('myq-api');
 
 module.exports = NodeHelper.create({
     start() {
@@ -24,17 +24,23 @@ module.exports = NodeHelper.create({
                         throw new Error('login failure');
                     }
 
-                    this.sendSocketNotification('MYQ_LOGGED_IN');
+                    this.sendSocketNotification('MYQ_LOGGED_IN', constants);
                     this.getData();
+
+                    setInterval(() => {
+                        this.getData();
+                    }, this.config.updateInterval);
                 })
                 .catch((err) => {
                     this.sendSocketNotification('MYQ_ERROR', {context: 'login', err});
-                    console.error(`myq login error: ${err}`);
+                    console.error(`${this.name} login error: ${err}`);
                 });
-
-            setInterval(() => {
-                this.getData();
-            }, this.config.updateInterval);
+        } else if (notification === 'MYQ_TOGGLE' && this.config) {
+            const {device, action} = payload;
+            this.account.setDeviceState(device.serialNumber, action)
+                .then((result) => {
+                    this.sendSocketNotification('MYQ_TOGGLE_COMPLETE', result.returnCode === 0);
+                });
         }
     },
 
@@ -45,12 +51,8 @@ module.exports = NodeHelper.create({
                     if (this.config.types.includes(device.type)) {
                         this.sendSocketNotification('MYQ_DEVICE_FOUND', device);
 
-                        console.log('getting door state');
-                        console.log(device);
                         this.account.getDoorState(device.serialNumber)
                             .then((state) => {
-                                console.log('state');
-                                console.log(state);
                                 if (state.returnCode === 0) {
                                     this.sendSocketNotification('MYQ_DEVICE_STATE', { device, state });
                                 }
@@ -60,7 +62,7 @@ module.exports = NodeHelper.create({
             })
             .catch((err) => {
                 this.sendSocketNotification('MYQ_ERROR', {context: 'getDevices', err});
-                console.error(`myQ getDevices error: ${err}`);
+                console.error(`${this.name} getDevices error: ${err}`);
             });
     }
 });
