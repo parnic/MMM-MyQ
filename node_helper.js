@@ -71,18 +71,5 @@ module.exports = NodeHelper.create({
 
         let devices = result.devices.filter((device) => this.config.types.includes(device.device_type));
         this.sendSocketNotification('MYQ_DEVICES_FOUND', devices);
-
-        devices.forEach((device) => {
-            this.account.getDoorState(device.serial_number)
-                .then((state) => {
-                    if (state.code === MyQ.constants.codes.OK) {
-                        this.sendSocketNotification('MYQ_DEVICE_STATE', { device, state });
-                    } else {
-                        let err = `getDoorState failed with code ${result.code}`;
-                        this.sendSocketNotification('MYQ_ERROR', {context: 'getDevices', err});
-                        console.error(`${this.name} getDoorState error: ${err}`);
-                    }
-                });
-        });
     }
 });
