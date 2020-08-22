@@ -22,6 +22,6 @@
     "eslint": "^7.7.0"
   },
   "dependencies": {
-    "myq-api": "github:parnic/myq-api#9402fed007a9039b06d5b73c6fa6138cae2723d5"
+    "myq-api": "github:thomasmunduchira/myq-api#afaed86914feab6b02696d8e8c8566d0465c7f62"
   }
 }

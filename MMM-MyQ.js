@@ -13,6 +13,13 @@ Module.register('MMM-MyQ', {
         updateInterval: 5 * 60 * 1000 // every 5 minutes
     },
 
+    states: {
+        closed: 'closed',
+        open: 'open',
+        closing: 'closing',
+        opening: 'opening'
+    },
+
     getStyles() {
         return ['MMM-MyQ.css'];
     },
@@ -25,11 +32,9 @@ Module.register('MMM-MyQ', {
 
     socketNotificationReceived(notification, payload) {
         if (notification === 'MYQ_LOGGED_IN') {
-            this.constants = payload;
-            this.constantsHelper = {
-                openState: this.constants.doorStates[1],
-                closedState: this.constants.doorStates[2],
-            };
+            let {constants, actions} = payload;
+            this.constants = constants;
+            this.actions = actions;
         } else if (notification === 'MYQ_ERROR') {
             const {context, err} = payload;
             Log.error(`context=${context}, err=${err.message}`);
@@ -45,13 +50,13 @@ Module.register('MMM-MyQ', {
                 this.deviceStates.set(device, {state});
                 existingDevice = device;
             } else {
-                this.updateDevice(existingDevice, device);
+                existingDevice.state = device.state;
             }
 
             let entry = this.deviceStates.get(existingDevice);
             entry.state = state;
             if (entry.desiredState) {
-                if (state.doorState !== entry.desiredState) {
+                if (state.deviceState !== entry.desiredState) {
                     this.scheduleUpdate();
                 } else {
                     entry.desiredState = null;
@@ -74,12 +79,6 @@ Module.register('MMM-MyQ', {
         }
 
         return null;
-    },
-
-    updateDevice(existingDevice, device) {
-        existingDevice.doorState = device.doorState;
-        existingDevice.doorStateUpdated = device.doorStateUpdated;
-        existingDevice.online = device.online;
     },
 
     scheduleUpdate() {
@@ -108,10 +107,10 @@ Module.register('MMM-MyQ', {
         nameLabel.textContent = device.name;
 
         const actionLabel = document.createElement('div');
-        let action = this.constants.doorCommands.close;
+        let action = this.actions.close;
         actionLabel.textContent = this.translate('Opened');
-        if (deviceData.state.doorState === this.constantsHelper.closedState) {
-            action = this.constants.doorCommands.open;
+        if (deviceData.state.deviceState === this.states.closed) {
+            action = this.actions.open;
             actionLabel.textContent = this.translate('Closed');
         }
 
@@ -122,7 +121,7 @@ Module.register('MMM-MyQ', {
             this.sendSocketNotification('MYQ_TOGGLE', {device, action});
             btn.disabled = true;
             actionLabel.textContent = '';
-            deviceData.desiredState = action === this.constants.doorCommands.close ? this.constantsHelper.closedState : this.constantsHelper.openState;
+            deviceData.desiredState = action === this.actions.close ? this.states.closed : this.states.open;
         }
 
         btn.appendChild(nameLabel);

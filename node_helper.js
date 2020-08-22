@@ -6,9 +6,14 @@
  */
 
 const NodeHelper = require('node_helper');
-const { myQ, constants } = require('myq-api');
+const MyQ = require('myq-api');
 
 module.exports = NodeHelper.create({
+    customActions: {
+        open: 'open',
+        close: 'close'
+    },
+
     start() {
         console.log(`Starting module helper: ${this.name}`);
     },
@@ -23,63 +28,61 @@ module.exports = NodeHelper.create({
         }, this.config.updateInterval);
     },
 
-    socketNotificationReceived(notification, payload) {
+    async socketNotificationReceived(notification, payload) {
         if (notification === 'MYQ_CONFIG') {
             this.config = payload;
-            this.account = new myQ(this.config.email, this.config.password);
+            this.account = new MyQ();
 
-            this.account.login()
-                .then((result) => {
-                    if (result.returnCode !== 0) {
-                        throw new Error('login failure');
-                    }
+            let result = await this.account.login(this.config.email, this.config.password)
+            if (result.code !== MyQ.constants.codes.OK) {
+                let err = `login failed with code ${result.code}`;
+                this.sendSocketNotification('MYQ_ERROR', {context: 'login', err});
+                console.error(`${this.name} login error: ${err}`);
+                return;
+            }
 
-                    this.sendSocketNotification('MYQ_LOGGED_IN', constants);
-                    this.getData();
+            this.sendSocketNotification('MYQ_LOGGED_IN', {constants: MyQ.constants, actions: this.customActions});
+            this.getData();
 
-                    this.resetUpdates();
-                })
-                .catch((err) => {
-                    this.sendSocketNotification('MYQ_ERROR', {context: 'login', err});
-                    console.error(`${this.name} login error: ${err}`);
-                });
+            this.resetUpdates();
         } else if (this.config) {
             if (notification === 'MYQ_TOGGLE') {
                 const {device, action} = payload;
-                this.account.setDeviceState(device.serialNumber, action)
-                    .then((result) => {
-                        this.sendSocketNotification('MYQ_TOGGLE_COMPLETE', result.returnCode === 0);
-                    });
+                const myqAction = action === this.customActions.open ? MyQ.actions.door.OPEN : MyQ.actions.door.CLOSE;
+
+                let result = await this.account.setDoorState(device.serial_number, myqAction);
+                this.sendSocketNotification('MYQ_TOGGLE_COMPLETE', result.returnCode === 0);
             } else if (notification === 'MYQ_UPDATE') {
                 this.getData();
             }
         }
     },
 
-    getData() {
+    async getData() {
         this.resetUpdates();
 
-        this.account.getDevices()
-            .then((result) => {
-                if (result.returnCode !== 0) {
-                    throw new Error('getDevices error');
-                }
+        let result = await this.account.getDevices();
+        if (result.code !== MyQ.constants.codes.OK) {
+            let err = `getDevices failed with code ${result.code}`;
+            this.sendSocketNotification('MYQ_ERROR', {context: 'getDevices', err});
+            console.error(`${this.name} getDevices error: ${err}`);
+            return;
+        }
 
-                let devices = result.devices.filter((device) => this.config.types.includes(device.type));
-                this.sendSocketNotification('MYQ_DEVICES_FOUND', devices);
+        let devices = result.devices.filter((device) => this.config.types.includes(device.device_type));
+        this.sendSocketNotification('MYQ_DEVICES_FOUND', devices);
 
-                devices.forEach((device) => {
-                    this.account.getDoorState(device.serialNumber)
-                        .then((state) => {
-                            if (state.returnCode === 0) {
-                                this.sendSocketNotification('MYQ_DEVICE_STATE', { device, state });
-                            }
-                        });
+        devices.forEach((device) => {
+            this.account.getDoorState(device.serial_number)
+                .then((state) => {
+                    if (state.code === MyQ.constants.codes.OK) {
+                        this.sendSocketNotification('MYQ_DEVICE_STATE', { device, state });
+                    } else {
+                        let err = `getDoorState failed with code ${result.code}`;
+                        this.sendSocketNotification('MYQ_ERROR', {context: 'getDevices', err});
+                        console.error(`${this.name} getDoorState error: ${err}`);
+                    }
                 });
-            })
-            .catch((err) => {
-                this.sendSocketNotification('MYQ_ERROR', {context: 'getDevices', err});
-                console.error(`${this.name} getDevices error: ${err}`);
-            });
+        });
     }
 });
