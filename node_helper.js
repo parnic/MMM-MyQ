@@ -9,7 +9,7 @@ const NodeHelper = require('node_helper');
 const MyQ = require('myq-api');
 
 module.exports = NodeHelper.create({
-    customActions: {
+    _customActions: {
         open: 'open',
         close: 'close'
     },
@@ -28,48 +28,64 @@ module.exports = NodeHelper.create({
         }, this.config.updateInterval);
     },
 
-    async socketNotificationReceived(notification, payload) {
+    socketNotificationReceived(notification, payload) {
         if (notification === 'MYQ_CONFIG') {
             this.config = payload;
             this.account = new MyQ();
-
-            let result = await this.account.login(this.config.email, this.config.password)
-            if (result.code !== MyQ.constants.codes.OK) {
-                let err = `login failed with code ${result.code}`;
-                this.sendSocketNotification('MYQ_ERROR', {context: 'login', err});
-                console.error(`${this.name} login error: ${err}`);
-                return;
-            }
-
-            this.sendSocketNotification('MYQ_LOGGED_IN', {constants: MyQ.constants, actions: this.customActions});
-            this.getData();
-
-            this.resetUpdates();
+            this.login();
         } else if (this.config) {
             if (notification === 'MYQ_TOGGLE') {
                 const {device, action} = payload;
-                const myqAction = action === this.customActions.open ? MyQ.actions.door.OPEN : MyQ.actions.door.CLOSE;
+                const myqAction = action === this._customActions.open ? MyQ.actions.door.OPEN : MyQ.actions.door.CLOSE;
 
-                let result = await this.account.setDoorState(device.serial_number, myqAction);
-                this.sendSocketNotification('MYQ_TOGGLE_COMPLETE', result.returnCode === 0);
+                this.account.setDoorState(device.serial_number, myqAction)
+                    .then((result) => {
+                        this.sendSocketNotification('MYQ_TOGGLE_COMPLETE', result.code === 0);
+                    })
+                    .catch((error) => this.handleError(error, 'setDoorState', true));
             } else if (notification === 'MYQ_UPDATE') {
                 this.getData();
             }
         }
     },
 
-    async getData() {
+    getData() {
         this.resetUpdates();
 
-        let result = await this.account.getDevices();
-        if (result.code !== MyQ.constants.codes.OK) {
-            let err = `getDevices failed with code ${result.code}`;
-            this.sendSocketNotification('MYQ_ERROR', {context: 'getDevices', err});
-            console.error(`${this.name} getDevices error: ${err}`);
-            return;
-        }
+        this.account.getDevices()
+            .then((result) => {
+                if (result.code !== MyQ.constants.codes.OK) {
+                    this.handleError(result, 'getDevices - then', true);
+                    return;
+                }
 
-        let devices = result.devices.filter((device) => this.config.types.includes(device.device_type));
-        this.sendSocketNotification('MYQ_DEVICES_FOUND', devices);
+                let devices = result.devices.filter((device) => this.config.types.includes(device.device_type));
+                this.sendSocketNotification('MYQ_DEVICES_FOUND', devices);
+            })
+            .catch((error) => this.handleError(error, 'getDevices', true));
+    },
+
+    login() {
+        this.account.login(this.config.email, this.config.password)
+            .then((result) => {
+                if (result.code !== MyQ.constants.codes.OK) {
+                    this.handleError(result, 'login - then');
+                    return;
+                }
+
+                this.sendSocketNotification('MYQ_LOGGED_IN', {constants: MyQ.constants, actions: this._customActions});
+                this.getData();
+            })
+            .catch((error) => this.handleError(error, 'login'));
+    },
+
+    handleError(error, context, attemptLogin) {
+        if (attemptLogin && error.code === MyQ.constants.codes.LOGIN_REQUIRED) {
+            this.login();
+        } else {
+            let err = `${context} failed with code ${error.code}`;
+            this.sendSocketNotification('MYQ_ERROR', {context, err});
+            console.error(`${this.name} ${context} error: ${err}`);
+        }
     }
 });
