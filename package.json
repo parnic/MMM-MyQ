@@ -19,9 +19,9 @@
   },
   "homepage": "https://github.com/parnic/MMM-MyQ#readme",
   "devDependencies": {
-    "eslint": "^7.7.0"
+    "eslint": "^7.17.0"
   },
   "dependencies": {
-    "myq-api": "github:thomasmunduchira/myq-api#v2.0.3"
+    "myq-api": "github:thomasmunduchira/myq-api#442ac9f2ffe3a961ddd7c8266ce738d938da8164"
   }
 }
