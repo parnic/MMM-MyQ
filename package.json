@@ -1,27 +1,27 @@
 {
-  "name": "mmm-myq",
-  "version": "1.0.0",
-  "description": "MyQ module for MagicMirror2",
-  "scripts": {
-    "lint": "./node_modules/.bin/eslint ."
-  },
-  "repository": "github:parnic/MMM-MyQ",
-  "keywords": [
-    "MagicMirror",
-    "MyQ",
-    "Chamberlain",
-    "LiftMaster"
-  ],
-  "author": "parnic",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/parnic/MMM-MyQ/issues"
-  },
-  "homepage": "https://github.com/parnic/MMM-MyQ#readme",
-  "devDependencies": {
-    "eslint": "^7.18.0"
-  },
-  "dependencies": {
-    "myq-api": "github:thomasmunduchira/myq-api#v2.0.4"
-  }
+    "name": "mmm-myq",
+    "version": "1.0.0",
+    "description": "MyQ module for MagicMirror2",
+    "scripts": {
+        "lint": "./node_modules/.bin/eslint ."
+    },
+    "repository": "github:parnic/MMM-MyQ",
+    "keywords": [
+        "MagicMirror",
+        "MyQ",
+        "Chamberlain",
+        "LiftMaster"
+    ],
+    "author": "parnic",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/parnic/MMM-MyQ/issues"
+    },
+    "homepage": "https://github.com/parnic/MMM-MyQ#readme",
+    "devDependencies": {
+        "eslint": "^7.26.0"
+    },
+    "dependencies": {
+        "myq-api": "^2.0.4"
+    }
 }
