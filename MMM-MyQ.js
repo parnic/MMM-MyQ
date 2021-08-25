@@ -10,6 +10,7 @@ Module.register('MMM-MyQ', {
         email: '',
         password: '',
         types: ['wifigaragedooropener'],
+        columns: 1,
         updateInterval: 5 * 60 * 1000 // every 5 minutes
     },
 
@@ -75,7 +76,24 @@ Module.register('MMM-MyQ', {
     getDom() {
         const wrapper = document.createElement('div');
 
-        this.devices.forEach((device) => { wrapper.appendChild(this.getDeviceDom(device)); });
+        let table = document.createElement('table');
+        wrapper.appendChild(table);
+
+        let cols = -1;
+
+        let row;
+        this.devices.forEach((device) => {
+            cols++;
+            if (cols % this.config.columns === 0) {
+                row = document.createElement('tr');
+                table.appendChild(row);
+            }
+
+            let cell = document.createElement('td');
+            cell.classList.add('btn');
+            cell.appendChild(this.getDeviceDom(device));
+            row.appendChild(cell);
+        });
 
         return wrapper;
     },

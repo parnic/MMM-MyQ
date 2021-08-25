@@ -1,5 +1,10 @@
-.MMM-MyQ {
+.MMM-MyQ .btn {
     min-width: 150px;
+}
+
+.MMM-MyQ {
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
 .MMM-MyQ .control {
@@ -13,7 +18,7 @@
     transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
     box-sizing: border-box;
     position: relative;
-    width: 80%;
+    width: 100%;
     height: 5rem;
     margin: auto;
     font-weight: bold;

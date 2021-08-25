@@ -36,4 +36,5 @@ Currently only supports garage doors. Support for lights/other MyQ devices is po
 | `email` | `''` | Your MyQ login address. (required) |
 | `password` | `''` | Your MyQ login password. (required) |
 | `types` | `['wifigaragedooropener']` | The types of MyQ devices to track. See [here](https://github.com/parnic/myq-api/blob/develop/src/constants.js#L8-L11) for a list of known device types. |
+| `columns` | `1` | How many columns of buttons should be used when there are multiple devices. 1 column with 2 devices will stack them vertically while 2 columns would align them horizontally. |
 | `updateInterval` | `5 * 60 * 1000` (5 minutes) | How often to update the state of your devices, in milliseconds. |
