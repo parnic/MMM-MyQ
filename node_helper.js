@@ -52,7 +52,7 @@ module.exports = NodeHelper.create({
     async refreshDevices() {
         let result = await this.account.refreshDevices();
         if (!result) {
-            this.handleError(result, 'refreshDevices returned false');
+            this.handleError('refreshDevices returned false');
             return;
         }
 
@@ -65,12 +65,12 @@ module.exports = NodeHelper.create({
         if (result) {
             this.sendSocketNotification('MYQ_TOGGLE_COMPLETE', result);
         } else {
-            this.handleError(error, 'execute');
+            this.handleError('execute');
         }
     },
 
-    handleError(error, context) {
-        let err = `${context} failed with code ${error.code}`;
+    handleError(context) {
+        let err = `${context} failed`;
         this.sendSocketNotification('MYQ_ERROR', {context, err});
         console.error(`${this.name} ${context} error: ${err}`);
     }
