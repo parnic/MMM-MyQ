@@ -33,9 +33,7 @@ Module.register('MMM-MyQ', {
 
     socketNotificationReceived(notification, payload) {
         if (notification === 'MYQ_LOGGED_IN') {
-            let {constants, actions} = payload;
-            this.constants = constants;
-            this.actions = actions;
+            this.actions = payload;
         } else if (notification === 'MYQ_ERROR') {
             const {context, err} = payload;
             Log.error(`context=${context}, err=${err.message}`);
