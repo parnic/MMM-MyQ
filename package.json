@@ -22,6 +22,6 @@
         "eslint": "^7.26.0"
     },
     "dependencies": {
-        "@hjdhjd/myq": "^6.0.4"
+        "myq": "hjdhjd/myq#semver:^6.0.4"
     }
 }
