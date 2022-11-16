@@ -22,6 +22,6 @@
         "eslint": "^7.26.0"
     },
     "dependencies": {
-        "@hjdhjd/myq": "github:hjdhjd/myq"
+        "@hjdhjd/myq": "^6.0.7"
     }
 }
