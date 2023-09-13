@@ -6,7 +6,9 @@
         "radix": [2, "as-needed"],
         "no-console": 0,
         "linebreak-style": "off",
-        "prettier/prettier": 0
+        "prettier/prettier": 0,
+        "quotes": ["error", "single"],
+        "jsdoc/require-jsdoc": 0
     },
     "settings": {
         "import/core-modules": [ "node_helper" ]
@@ -14,9 +16,9 @@
     "env": {
         "browser": true,
         "node": true,
-        "es6": true
+        "es2017": true
     },
     "parserOptions": {
-        "ecmaVersion": 8
+        "ecmaVersion": "latest"
     }
 }

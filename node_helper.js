@@ -6,7 +6,6 @@
  */
 
 const NodeHelper = require('node_helper');
-const MyQ = require('@hjdhjd/myq');
 
 module.exports = NodeHelper.create({
     _customActions: {
@@ -28,10 +27,13 @@ module.exports = NodeHelper.create({
         }, this.config.updateInterval);
     },
 
-    socketNotificationReceived(notification, payload) {
+    async socketNotificationReceived(notification, payload) {
         if (notification === 'MYQ_CONFIG') {
-            this.config = payload;
-            this.account = new MyQ.myQApi(this.config.email, this.config.password);
+            if (!this.config) {
+                this.config = payload;
+                const MyQ = await import('@hjdhjd/myq');
+                this.account = new MyQ.myQApi(this.config.email, this.config.password, null, 'east');
+            }
             this.sendSocketNotification('MYQ_LOGGED_IN', this._customActions);
             this.getData();
         } else if (this.config) {

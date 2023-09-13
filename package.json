@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "MyQ module for MagicMirror2",
     "scripts": {
-        "lint": "./node_modules/.bin/eslint ."
+        "lint": "eslint ."
     },
     "repository": "github:parnic/MMM-MyQ",
     "keywords": [
@@ -19,9 +19,9 @@
     },
     "homepage": "https://github.com/parnic/MMM-MyQ#readme",
     "devDependencies": {
-        "eslint": "^7.26.0"
+        "eslint": "^8.0.1"
     },
     "dependencies": {
-        "@hjdhjd/myq": "^6.0.7"
+        "@hjdhjd/myq": "^7.4.2"
     }
 }
