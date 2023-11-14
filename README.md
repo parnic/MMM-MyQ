@@ -1,5 +1,13 @@
 # MMM-MyQ
 
+## Stop-development notice
+
+Chamberlain is being actively hostile toward third party uses of the MyQ API, and this is module is not valuable enough to me to fight a cat-and-mouse game with them, so I'd rather just cease development of the module and eventually replace my garage door opener with something different.
+
+See <https://www.theverge.com/23949612/chamberlain-myq-smart-garage-door-controller-homebridge-integrations> among others.
+
+## About
+
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/parnic/MMM-MyQ/main/LICENSE)
 
 MyQ module for MagicMirror². Enables display and control of MyQ devices (specifically garage door openers) from Chamberlain, LiftMaster.
